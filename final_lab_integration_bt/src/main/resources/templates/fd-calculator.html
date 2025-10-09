@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="context-path" content="/fd-simulator">
+    <title>FD Calculator - CASHCACHED</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient-start: #FF5BBE;
+            --primary-gradient-end: #FF0099;
+            --secondary-purple: #7C3AED;
+            --secondary-aqua: #00F0FF;
+            --dark-bg: #0D0D12;
+            --light-bg: #F5F5F7;
+            --grey-text: #6B7280;
+            --shadow: 0px 4px 10px rgba(0,0,0,0.25);
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, var(--primary-gradient-start) 0%, var(--primary-gradient-end) 100%);
+            min-height: 100vh;
+            padding: 20px 0;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 50%, var(--secondary-purple) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, var(--secondary-aqua) 0%, transparent 50%);
+            opacity: 0.3;
+            z-index: 0;
+        }
+        
+        .calculator-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .calculator-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        
+        .calculator-header {
+            background: linear-gradient(135deg, var(--primary-gradient-start), var(--primary-gradient-end));
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .calculator-header h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+        
+        .calculator-body {
+            padding: 40px;
+        }
+        
+        .product-selector {
+            margin-bottom: 30px;
+        }
+        
+        .product-card-selector {
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+        }
+        
+        .product-card-selector:hover {
+            border-color: var(--primary-gradient-end);
+            background: #fef2f8;
+        }
+        
+        .product-card-selector.selected {
+            border-color: var(--primary-gradient-end);
+            background: linear-gradient(135deg, rgba(255, 91, 190, 0.1), rgba(255, 0, 153, 0.1));
+        }
+        
+        .product-card-selector h5 {
+            margin: 0 0 5px 0;
+            background: linear-gradient(135deg, var(--primary-gradient-start), var(--primary-gradient-end));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+        }
+        
+        .product-card-selector .rate {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark-bg);
+            font-family: 'SF Mono', 'Courier New', monospace;
+        }
+        
+        .slider-container {
+            margin: 30px 0;
+        }
+        
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--dark-bg);
+        }
+        
+        .slider-value {
+            background: linear-gradient(135deg, var(--primary-gradient-start), var(--primary-gradient-end));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 1.2rem;
+            font-weight: 700;
+            font-family: 'SF Mono', 'Courier New', monospace;
+        }
+        
+        .custom-slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #e2e8f0;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        
+        .custom-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-gradient-start), var(--primary-gradient-end));
+            cursor: pointer;
+            box-shadow: var(--shadow);
+        }
+        
+        .custom-slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-gradient-start), var(--primary-gradient-end));
+            cursor: pointer;
+            border: none;
+            box-shadow: var(--shadow);
+        }
+        
+        .result-card {
+            background: linear-gradient(135deg, var(--primary-gradient-start) 0%, var(--primary-gradient-end) 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-top: 30px;
+            box-shadow: var(--shadow);
+        }
+        
+        .result-item {
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+        
+        .result-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        
+        .result-value {
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: 'SF Mono', 'Courier New', monospace;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: var(--shadow);
+        }
+        
+        .btn-calculate {
+            background: linear-gradient(135deg, var(--primary-gradient-start), var(--primary-gradient-end));
+            color: white;
+            padding: 16px 40px;
+            border: none;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 20px;
+            box-shadow: var(--shadow);
+        }
+        
+        .btn-calculate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0px 8px 20px rgba(255, 0, 153, 0.4);
+        }
+        
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: white;
+            color: var(--primary-gradient-end);
+            border: none;
+            border-radius: 16px;
+            padding: 12px 24px;
+            font-weight: 600;
+            box-shadow: var(--shadow);
+            z-index: 1000;
+        }
+        
+        .back-button:hover {
+            background: var(--light-bg);
+            transform: translateY(-2px);
+            box-shadow: 0px 8px 20px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <button class="back-button" onclick="goBack()">
+        <i class="fas fa-arrow-left"></i> Back
+    </button>
+    
+    <div class="calculator-container">
+        <div class="calculator-card">
+            <div class="calculator-header">
+                <h1><i class="fas fa-calculator"></i> Fixed Deposit Calculator</h1>
+                <p style="margin: 10px 0 0 0; opacity: 0.9;">Calculate your FD returns based on our product offerings</p>
+            </div>
+            
+            <div class="calculator-body">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <!-- Product Selection -->
+                        <div class="product-selector">
+                            <h4 style="margin-bottom: 20px; color: var(--dark-color);">
+                                <i class="fas fa-box"></i> Select FD Product
+                            </h4>
+                            <div id="productsList">
+                                <div class="text-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Amount Slider -->
+                        <div class="slider-container">
+                            <div class="slider-label">
+                                <span><i class="fas fa-rupee-sign"></i> Deposit Amount</span>
+                                <span class="slider-value" id="amountValue">₹50,000</span>
+                            </div>
+                            <input type="range" class="custom-slider" id="amountSlider" 
+                                   min="5000" max="1000000" step="5000" value="50000">
+                            <div class="d-flex justify-content-between mt-2" style="font-size: 0.85rem; color: #64748b;">
+                                <span id="minAmountLabel">₹5,000</span>
+                                <span id="maxAmountLabel">₹10,00,000</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Tenure Slider -->
+                        <div class="slider-container">
+                            <div class="slider-label">
+                                <span><i class="fas fa-calendar"></i> Tenure</span>
+                                <span class="slider-value" id="tenureValue">12 months</span>
+                            </div>
+                            <input type="range" class="custom-slider" id="tenureSlider" 
+                                   min="3" max="60" step="1" value="12">
+                            <div class="d-flex justify-content-between mt-2" style="font-size: 0.85rem; color: #64748b;">
+                                <span id="minTenureLabel">3 months</span>
+                                <span id="maxTenureLabel">60 months</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Interest Rate Display -->
+                        <div class="slider-container">
+                            <div class="slider-label">
+                                <span><i class="fas fa-percent"></i> Interest Rate</span>
+                                <span class="slider-value" id="rateValue">6.5%</span>
+                            </div>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> Interest rate is determined by the selected product
+                            </div>
+                        </div>
+                        
+                        <button class="btn-calculate" onclick="calculateReturns()">
+                            <i class="fas fa-calculator"></i> Calculate Returns
+                        </button>
+                    </div>
+                    
+                    <div class="col-lg-6">
+                        <!-- Results -->
+                        <div class="result-card" id="resultsCard" style="display: none;">
+                            <h4 style="margin-bottom: 20px;">
+                                <i class="fas fa-chart-line"></i> Your Returns
+                            </h4>
+                            
+                            <div class="result-item">
+                                <div class="result-label">Principal Amount</div>
+                                <div class="result-value" id="principalDisplay">₹0</div>
+                            </div>
+                            
+                            <div class="result-item">
+                                <div class="result-label">Interest Earned</div>
+                                <div class="result-value" id="interestDisplay">₹0</div>
+                            </div>
+                            
+                            <div class="result-item" style="background: rgba(255,255,255,0.2);">
+                                <div class="result-label">Maturity Amount</div>
+                                <div class="result-value" id="maturityDisplay">₹0</div>
+                            </div>
+                            
+                            <div class="mt-3" style="font-size: 0.9rem; opacity: 0.9;">
+                                <i class="fas fa-calendar-check"></i> Maturity Date: <span id="maturityDate">-</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Chart -->
+                        <div class="chart-container" id="chartContainer" style="display: none;">
+                            <canvas id="fdChart"></canvas>
+                        </div>
+                        
+                        <!-- Call to Action -->
+                        <div class="text-center mt-4" id="ctaSection" style="display: none;">
+                            <button class="btn btn-success btn-lg" onclick="goToLogin()">
+                                <i class="fas fa-user-plus"></i> Open FD Account
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="/fd-simulator/js/auth.js"></script>
+    <script>
+        const BASE_URL = window.__FD_CONTEXT__ || '';
+        let products = [];
+        let selectedProduct = null;
+        let chartInstance = null;
+        
+        function goBack() {
+            window.location.href = BASE_URL + '/cashcached';
+        }
+        
+        function goToLogin() {
+            window.location.href = BASE_URL + '/login';
+        }
+        
+        // Load products
+        async function loadProducts() {
+            try {
+                const response = await fetch(BASE_URL + '/api/public/products/active');
+                products = await response.json();
+                
+                const container = document.getElementById('productsList');
+                container.innerHTML = '';
+                
+                if (products.length === 0) {
+                    container.innerHTML = '<p class="text-center">No products available</p>';
+                    return;
+                }
+                
+                products.forEach((product, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'product-card-selector' + (index === 0 ? ' selected' : '');
+                    card.onclick = () => selectProduct(product);
+                    card.innerHTML = `
+                        <h5>${product.productName}</h5>
+                        <div class="rate">${product.interestRate}% p.a.</div>
+                        <small style="color: #64748b;">
+                            ₹${product.minAmount.toLocaleString()} - ₹${product.maxAmount.toLocaleString()} | 
+                            ${product.minTenureMonths}-${product.maxTenureMonths} months
+                        </small>
+                    `;
+                    container.appendChild(card);
+                });
+                
+                // Select first product by default
+                if (products.length > 0) {
+                    selectProduct(products[0]);
+                }
+            } catch (error) {
+                console.error('Error loading products:', error);
+                document.getElementById('productsList').innerHTML = 
+                    '<p class="text-center text-danger">Error loading products</p>';
+            }
+        }
+        
+        function selectProduct(product) {
+            selectedProduct = product;
+            
+            // Update UI
+            document.querySelectorAll('.product-card-selector').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.target.closest('.product-card-selector').classList.add('selected');
+            
+            // Update sliders
+            const amountSlider = document.getElementById('amountSlider');
+            const tenureSlider = document.getElementById('tenureSlider');
+            
+            amountSlider.min = product.minAmount;
+            amountSlider.max = product.maxAmount;
+            amountSlider.value = product.minAmount;
+            
+            tenureSlider.min = product.minTenureMonths;
+            tenureSlider.max = product.maxTenureMonths;
+            tenureSlider.value = product.minTenureMonths;
+            
+            // Update labels
+            document.getElementById('minAmountLabel').textContent = '₹' + product.minAmount.toLocaleString();
+            document.getElementById('maxAmountLabel').textContent = '₹' + product.maxAmount.toLocaleString();
+            document.getElementById('minTenureLabel').textContent = product.minTenureMonths + ' months';
+            document.getElementById('maxTenureLabel').textContent = product.maxTenureMonths + ' months';
+            document.getElementById('rateValue').textContent = product.interestRate + '%';
+            
+            updateSliderValues();
+        }
+        
+        function updateSliderValues() {
+            const amount = document.getElementById('amountSlider').value;
+            const tenure = document.getElementById('tenureSlider').value;
+            
+            document.getElementById('amountValue').textContent = '₹' + parseInt(amount).toLocaleString();
+            document.getElementById('tenureValue').textContent = tenure + ' months';
+        }
+        
+        function calculateReturns() {
+            if (!selectedProduct) {
+                alert('Please select a product');
+                return;
+            }
+            
+            const principal = parseFloat(document.getElementById('amountSlider').value);
+            const tenureMonths = parseInt(document.getElementById('tenureSlider').value);
+            const rate = selectedProduct.interestRate;
+            
+            // Simple interest calculation
+            const timeInYears = tenureMonths / 12;
+            const interest = (principal * rate * timeInYears) / 100;
+            const maturity = principal + interest;
+            
+            // Calculate maturity date
+            const maturityDate = new Date();
+            maturityDate.setMonth(maturityDate.getMonth() + tenureMonths);
+            
+            // Display results
+            document.getElementById('principalDisplay').textContent = '₹' + principal.toLocaleString('en-IN', {maximumFractionDigits: 0});
+            document.getElementById('interestDisplay').textContent = '₹' + interest.toLocaleString('en-IN', {maximumFractionDigits: 0});
+            document.getElementById('maturityDisplay').textContent = '₹' + maturity.toLocaleString('en-IN', {maximumFractionDigits: 0});
+            document.getElementById('maturityDate').textContent = maturityDate.toLocaleDateString('en-IN', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            // Show results
+            document.getElementById('resultsCard').style.display = 'block';
+            document.getElementById('chartContainer').style.display = 'block';
+            document.getElementById('ctaSection').style.display = 'block';
+            
+            // Update chart
+            updateChart(principal, interest);
+        }
+        
+        function updateChart(principal, interest) {
+            const ctx = document.getElementById('fdChart').getContext('2d');
+            
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+            
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Principal Amount', 'Interest Earned'],
+                    datasets: [{
+                        data: [principal, interest],
+                        backgroundColor: ['#2563eb', '#10b981'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Investment Breakdown',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Event listeners
+        document.getElementById('amountSlider').addEventListener('input', updateSliderValues);
+        document.getElementById('tenureSlider').addEventListener('input', updateSliderValues);
+        
+        // Initialize
+        loadProducts();
+    </script>
+</body>
+</html>

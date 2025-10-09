@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="context-path" content="/fd-simulator">
+    <title>Admin Dashboard - Fixed Deposit Simulator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .sidebar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin: 5px 10px;
+            transition: all 0.3s ease;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .main-content {
+            padding: 2rem;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .stat-card .card-body {
+            padding: 1.5rem;
+        }
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        .table {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .btn-action {
+            padding: 5px 10px;
+            margin: 2px;
+            border-radius: 5px;
+        }
+        .logout-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar">
+                <div class="p-3">
+                    <h4><i class="fas fa-university"></i> FD Admin</h4>
+                </div>
+                <nav class="nav flex-column">
+                    <a class="nav-link active" href="#" onclick="showSection('dashboard')">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                    <a class="nav-link" href="#" onclick="showSection('users')">
+                        <i class="fas fa-users"></i> Users
+                    </a>
+                    <a class="nav-link" href="#" onclick="showSection('fixed-deposits')">
+                        <i class="fas fa-piggy-bank"></i> Fixed Deposits
+                    </a>
+                    <a class="nav-link" href="#" onclick="showSection('audit-logs')">
+                        <i class="fas fa-history"></i> Audit Logs
+                    </a>
+                    <a class="nav-link" href="#" onclick="showSection('products')">
+                        <i class="fas fa-box"></i> FD Products
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 main-content">
+                <!-- Logout Button -->
+                <button class="btn btn-outline-danger logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+
+                <!-- Dashboard Section -->
+                <div id="dashboard-section">
+                    <h2 class="mb-4">Admin Dashboard</h2>
+                    
+                    <!-- Statistics Cards -->
+                    <div class="row mb-4">
+                        <div class="col-md-3 mb-3">
+                            <div class="card stat-card">
+                                <div class="card-body text-center">
+                                    <div class="stat-number" id="totalUsers">-</div>
+                                    <div>Total Users</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card stat-card">
+                                <div class="card-body text-center">
+                                    <div class="stat-number" id="totalCustomers">-</div>
+                                    <div>Customers</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card stat-card">
+                                <div class="card-body text-center">
+                                    <div class="stat-number" id="totalFDs">-</div>
+                                    <div>Fixed Deposits</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card stat-card">
+                                <div class="card-body text-center">
+                                    <div class="stat-number" id="totalAmount">-</div>
+                                    <div>Total Amount (₹)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-clock"></i> Recent Activity</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="recentActivity">
+                                <p class="text-muted">Loading recent activity...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users Section -->
+                <div id="users-section" style="display: none;">
+                    <h2 class="mb-4">User Management</h2>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="usersTable">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Username</th>
+                                            <th>Email</th>
+                                            <th>Phone</th>
+                                            <th>Role</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="usersTableBody">
+                                        <tr>
+                                            <td colspan="7" class="text-center">Loading...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fixed Deposits Section -->
+                <div id="fixed-deposits-section" style="display: none;">
+                    <h2 class="mb-4">Fixed Deposits Management</h2>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="fdsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Customer</th>
+                                            <th>Amount</th>
+                                            <th>Rate</th>
+                                            <th>Tenure</th>
+                                            <th>Status</th>
+                                            <th>Maturity Date</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="fdsTableBody">
+                                        <tr>
+                                            <td colspan="8" class="text-center">Loading...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Audit Logs Section -->
+                <div id="audit-logs-section" style="display: none;">
+                    <h2 class="mb-4">Audit Logs</h2>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="auditTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Timestamp</th>
+                                            <th>User</th>
+                                            <th>Action</th>
+                                            <th>Entity</th>
+                                            <th>Details</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="auditTableBody">
+                                        <tr>
+                                            <td colspan="5" class="text-center">Loading...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FD Products Section -->
+                <div id="products-section" style="display: none;">
+                    <h2 class="mb-4">FD Product Management</h2>
+                    
+                    <div class="mb-3">
+                        <button class="btn btn-primary" onclick="showAddProductModal()">
+                            <i class="fas fa-plus"></i> Add New Product
+                        </button>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="productsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Product Name</th>
+                                            <th>Description</th>
+                                            <th>Amount Range</th>
+                                            <th>Tenure Range</th>
+                                            <th>Interest Rate</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="productsTableBody">
+                                        <tr>
+                                            <td colspan="8" class="text-center">Loading...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Modal -->
+    <div class="modal fade" id="productModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="productModalTitle">Add FD Product</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="productForm">
+                        <input type="hidden" id="productId">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Product Name *</label>
+                                <input type="text" class="form-control" id="productName" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Interest Rate (%) *</label>
+                                <input type="number" step="0.01" class="form-control" id="interestRate" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" id="description" rows="2"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Minimum Amount (₹) *</label>
+                                <input type="number" class="form-control" id="minAmount" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Maximum Amount (₹) *</label>
+                                <input type="number" class="form-control" id="maxAmount" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Minimum Tenure (Months) *</label>
+                                <input type="number" class="form-control" id="minTenure" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Maximum Tenure (Months) *</label>
+                                <input type="number" class="form-control" id="maxTenure" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            <select class="form-control" id="isActive">
+                                <option value="true">Active</option>
+                                <option value="false">Inactive</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveProduct()">Save Product</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Users Modal -->
+    <div class="modal fade" id="productUsersModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Product Users</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>User ID</th>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productUsersTableBody">
+                                <tr>
+                                    <td colspan="4" class="text-center">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    <script src="/fd-simulator/js/auth.js"></script>
+    <script>
+        let currentUser = null;
+        
+        // Check authentication
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            const role = localStorage.getItem('userRole');
+            
+            if (!token || role !== 'ADMIN') {
+                const base = window.__FD_CONTEXT__ || '';
+                window.location.href = base + '/login';
+                return false;
+            }
+            
+            currentUser = {
+                token: token,
+                role: role,
+                username: localStorage.getItem('username')
+            };
+            
+            return true;
+        }
+        
+        // API helper (JWT auto-injected by auth.js)
+        function apiCall(url, options = {}) {
+            return apiFetch(url, options);
+        }
+        
+        // Show section
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('[id$="-section"]').forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            // Remove active class from nav links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionName + '-section').style.display = 'block';
+            
+            // Add active class to clicked nav link
+            event.target.classList.add('active');
+            
+            // Load data for the section
+            switch(sectionName) {
+                case 'dashboard':
+                    loadDashboardData();
+                    break;
+                case 'users':
+                    loadUsersData();
+                    break;
+                case 'fixed-deposits':
+                    loadFDsData();
+                    break;
+                case 'products':
+                    loadProductsData();
+                    break;
+                case 'audit-logs':
+                    loadAuditLogsData();
+                    break;
+            }
+        }
+        
+        // Load dashboard data
+        function loadDashboardData() {
+            apiCall('/api/admin/dashboard/stats')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('totalUsers').textContent = data.totalUsers || 0;
+                    document.getElementById('totalCustomers').textContent = data.totalCustomers || 0;
+                    document.getElementById('totalFDs').textContent = data.totalFixedDeposits || 0;
+                    document.getElementById('totalAmount').textContent = 
+                        data.totalAmount ? '₹' + data.totalAmount.toLocaleString() : '₹0';
+                })
+                .catch(error => {
+                    console.error('Error loading dashboard data:', error);
+                });
+        }
+        
+        // Load users data
+        function loadUsersData() {
+            apiCall('/api/admin/users')
+                .then(response => response.json())
+                .then(users => {
+                    const tbody = document.getElementById('usersTableBody');
+                    tbody.innerHTML = '';
+                    
+                    users.forEach(user => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${user.id}</td>
+                            <td>${user.username}</td>
+                            <td>${user.email}</td>
+                            <td>${user.phoneNumber || '-'}</td>
+                            <td><span class="badge bg-${user.role === 'ADMIN' ? 'danger' : 'primary'}">${user.role}</span></td>
+                            <td><span class="badge bg-${user.enabled ? 'success' : 'secondary'}">${user.enabled ? 'Active' : 'Inactive'}</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary btn-action" onclick="editUser(${user.id})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger btn-action" onclick="deleteUser(${user.id})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading users:', error);
+                });
+        }
+        
+        // Load FDs data
+        function loadFDsData() {
+            apiCall('/api/admin/fixed-deposits')
+                .then(response => response.json())
+                .then(fds => {
+                    const tbody = document.getElementById('fdsTableBody');
+                    tbody.innerHTML = '';
+                    
+                    fds.forEach(fd => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${fd.id}</td>
+                            <td>${fd.user.username}</td>
+                            <td>₹${fd.principalAmount.toLocaleString()}</td>
+                            <td>${fd.interestRate}%</td>
+                            <td>${fd.tenureInMonths} months</td>
+                            <td><span class="badge bg-${getStatusColor(fd.status)}">${fd.status}</span></td>
+                            <td>${new Date(fd.maturityDate).toLocaleDateString()}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-warning btn-action" onclick="updateFDStatus(${fd.id})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger btn-action" onclick="closeFD(${fd.id})">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading FDs:', error);
+                });
+        }
+        
+        // Load audit logs data
+        function loadAuditLogsData() {
+            apiCall('/api/admin/audit-logs?size=50')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('auditTableBody');
+                    tbody.innerHTML = '';
+                    
+                    data.content.forEach(log => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${new Date(log.timestamp).toLocaleString()}</td>
+                            <td>${log.user.username}</td>
+                            <td><span class="badge bg-info">${log.action}</span></td>
+                            <td>${log.entityType}</td>
+                            <td>${log.oldValues || '-'}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading audit logs:', error);
+                });
+        }
+        
+        // Helper functions
+        function getStatusColor(status) {
+            switch(status) {
+                case 'ACTIVE': return 'success';
+                case 'MATURED': return 'primary';
+                case 'PREMATURE_CLOSED': return 'warning';
+                case 'CANCELLED': return 'danger';
+                default: return 'secondary';
+            }
+        }
+        
+        function editUser(userId) {
+            alert('Edit user functionality would be implemented here');
+        }
+        
+        function deleteUser(userId) {
+            if (confirm('Are you sure you want to delete this user?')) {
+                apiCall(`/api/admin/users/${userId}`, { method: 'DELETE' })
+                    .then(response => {
+                        if (response.ok) {
+                            loadUsersData();
+                            alert('User deleted successfully');
+                        } else {
+                            alert('Error deleting user');
+                        }
+                    });
+            }
+        }
+        
+        function updateFDStatus(fdId) {
+            const newStatus = prompt('Enter new status (ACTIVE, MATURED, PREMATURE_CLOSED, CANCELLED):');
+            if (newStatus) {
+                apiCall(`/api/admin/fixed-deposits/${fdId}/status?status=${newStatus}`, { method: 'PUT' })
+                    .then(response => {
+                        if (response.ok) {
+                            loadFDsData();
+                            alert('Status updated successfully');
+                        } else {
+                            alert('Error updating status');
+                        }
+                    });
+            }
+        }
+        
+        function closeFD(fdId) {
+            if (confirm('Are you sure you want to close this Fixed Deposit?')) {
+                apiCall(`/api/admin/fixed-deposits/${fdId}/close`, { method: 'POST' })
+                    .then(response => {
+                        if (response.ok) {
+                            loadFDsData();
+                            alert('Fixed Deposit closed successfully');
+                        } else {
+                            alert('Error closing Fixed Deposit');
+                        }
+                    });
+            }
+        }
+        
+        // Product Management Functions
+        function loadProductsData() {
+            apiCall('/api/admin/products')
+                .then(response => response.json())
+                .then(products => {
+                    const tbody = document.getElementById('productsTableBody');
+                    tbody.innerHTML = '';
+                    
+                    if (products.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="8" class="text-center">No products found</td></tr>';
+                        return;
+                    }
+                    
+                    products.forEach(product => {
+                        const row = `
+                            <tr>
+                                <td>${product.id}</td>
+                                <td>${product.productName}</td>
+                                <td>${product.description || '-'}</td>
+                                <td>₹${product.minAmount.toLocaleString()} - ₹${product.maxAmount.toLocaleString()}</td>
+                                <td>${product.minTenureMonths} - ${product.maxTenureMonths} months</td>
+                                <td>${product.interestRate}%</td>
+                                <td>
+                                    <span class="badge ${product.isActive ? 'bg-success' : 'bg-secondary'}">
+                                        ${product.isActive ? 'Active' : 'Inactive'}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-info btn-action" onclick="viewProductUsers(${product.id})">
+                                        <i class="fas fa-users"></i> Users
+                                    </button>
+                                    <button class="btn btn-sm btn-warning btn-action" onclick="editProduct(${product.id})">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <button class="btn btn-sm btn-danger btn-action" onclick="deleteProduct(${product.id})">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                        tbody.innerHTML += row;
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading products:', error);
+                    document.getElementById('productsTableBody').innerHTML = 
+                        '<tr><td colspan="8" class="text-center text-danger">Error loading products</td></tr>';
+                });
+        }
+        
+        function showAddProductModal() {
+            document.getElementById('productModalTitle').textContent = 'Add FD Product';
+            document.getElementById('productForm').reset();
+            document.getElementById('productId').value = '';
+            const modal = new bootstrap.Modal(document.getElementById('productModal'));
+            modal.show();
+        }
+        
+        function editProduct(productId) {
+            apiCall(`/api/admin/products/${productId}`)
+                .then(response => response.json())
+                .then(product => {
+                    document.getElementById('productModalTitle').textContent = 'Edit FD Product';
+                    document.getElementById('productId').value = product.id;
+                    document.getElementById('productName').value = product.productName;
+                    document.getElementById('description').value = product.description || '';
+                    document.getElementById('minAmount').value = product.minAmount;
+                    document.getElementById('maxAmount').value = product.maxAmount;
+                    document.getElementById('minTenure').value = product.minTenureMonths;
+                    document.getElementById('maxTenure').value = product.maxTenureMonths;
+                    document.getElementById('interestRate').value = product.interestRate;
+                    document.getElementById('isActive').value = product.isActive.toString();
+                    
+                    const modal = new bootstrap.Modal(document.getElementById('productModal'));
+                    modal.show();
+                })
+                .catch(error => {
+                    console.error('Error loading product:', error);
+                    alert('Error loading product details');
+                });
+        }
+        
+        function saveProduct() {
+            const productId = document.getElementById('productId').value;
+            const productData = {
+                productName: document.getElementById('productName').value,
+                description: document.getElementById('description').value,
+                minAmount: parseFloat(document.getElementById('minAmount').value),
+                maxAmount: parseFloat(document.getElementById('maxAmount').value),
+                minTenureMonths: parseInt(document.getElementById('minTenure').value),
+                maxTenureMonths: parseInt(document.getElementById('maxTenure').value),
+                interestRate: parseFloat(document.getElementById('interestRate').value),
+                isActive: document.getElementById('isActive').value === 'true'
+            };
+            
+            const url = productId ? `/api/admin/products/${productId}` : '/api/admin/products';
+            const method = productId ? 'PUT' : 'POST';
+            
+            apiCall(url, {
+                method: method,
+                body: JSON.stringify(productData)
+            })
+            .then(response => {
+                if (response.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
+                    loadProductsData();
+                    alert('Product saved successfully');
+                } else {
+                    return response.text().then(text => {
+                        throw new Error(text || 'Error saving product');
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error saving product:', error);
+                alert('Error saving product: ' + error.message);
+            });
+        }
+        
+        function deleteProduct(productId) {
+            if (confirm('Are you sure you want to delete this product?')) {
+                apiCall(`/api/admin/products/${productId}`, { method: 'DELETE' })
+                    .then(response => {
+                        if (response.ok) {
+                            loadProductsData();
+                            alert('Product deleted successfully');
+                        } else {
+                            alert('Error deleting product');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error deleting product:', error);
+                        alert('Error deleting product');
+                    });
+            }
+        }
+        
+        function viewProductUsers(productId) {
+            apiCall(`/api/admin/products/${productId}/users`)
+                .then(response => response.json())
+                .then(users => {
+                    const tbody = document.getElementById('productUsersTableBody');
+                    tbody.innerHTML = '';
+                    
+                    if (users.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="4" class="text-center">No users found for this product</td></tr>';
+                    } else {
+                        users.forEach(user => {
+                            const row = `
+                                <tr>
+                                    <td>${user.id}</td>
+                                    <td>${user.username}</td>
+                                    <td>${user.email}</td>
+                                    <td>${user.phoneNumber || '-'}</td>
+                                </tr>
+                            `;
+                            tbody.innerHTML += row;
+                        });
+                    }
+                    
+                    const modal = new bootstrap.Modal(document.getElementById('productUsersModal'));
+                    modal.show();
+                })
+                .catch(error => {
+                    console.error('Error loading product users:', error);
+                    alert('Error loading product users');
+                });
+        }
+        
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('username');
+            const base = window.__FD_CONTEXT__ || '';
+            window.location.href = base + '/login';
+        }
+        
+        // Initialize
+        if (checkAuth()) {
+            loadDashboardData();
+        }
+    </script>
+</body>
+</html>
